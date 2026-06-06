@@ -6,8 +6,9 @@ import { Button } from '../components/common/Button';
 
 export default function Login() {
   const { login, session } = useAuthContext();
+
   const navigate = useNavigate();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     const { error } = await login(email, password);
 
     if (error) {
