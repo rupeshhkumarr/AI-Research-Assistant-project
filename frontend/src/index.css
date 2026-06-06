@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  
+  /* Map Tailwind colors to our custom properties */
+  --color-bg-dark: var(--bg-main);
+  --color-bg-card: var(--bg-card);
+  --color-bg-sidebar: var(--bg-sidebar);
+  --color-bg-hover: var(--bg-hover);
+  --color-border: var(--border-color);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* Glassmorphism utilities */
+@utility glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+}
+
+@layer base {
+  :root {
+    --bg-main: #FFFFFF;
+    --bg-card: #F8FAFC;
+    --bg-sidebar: #FFFFFF;
+    --bg-hover: #F1F5F9;
+    --border-color: #E5E7EB;
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --bg-glass: rgba(255, 255, 255, 0.7);
+    --border-glass: rgba(0, 0, 0, 0.05);
+    --heading-color: #2563eb; /* blue-600 */
+  }
+
+  .dark {
+    --bg-main: #0F172A;
+    --bg-card: #111827;
+    --bg-sidebar: #111827;
+    --bg-hover: #1E293B;
+    --border-color: #1F2937;
+    --text-main: #F9FAFB;
+    --text-muted: #9CA3AF;
+    --bg-glass: rgba(17, 24, 39, 0.7);
+    --border-glass: rgba(255, 255, 255, 0.05);
+    --heading-color: #60a5fa; /* blue-400 */
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    transition: background-color 300ms, color 300ms, border-color 300ms;
+  }
+
+  .prose {
+    --tw-prose-body: var(--text-main);
+    --tw-prose-headings: var(--text-main);
+    --tw-prose-lead: var(--text-muted);
+    --tw-prose-links: var(--heading-color);
+    --tw-prose-bold: var(--heading-color);
+    --tw-prose-counters: var(--text-muted);
+    --tw-prose-bullets: var(--text-muted);
+    --tw-prose-hr: var(--border-color);
+    --tw-prose-quotes: var(--text-main);
+    --tw-prose-quote-borders: var(--border-color);
+    --tw-prose-captions: var(--text-muted);
+    --tw-prose-code: var(--text-main);
+    --tw-prose-pre-code: var(--text-main);
+    --tw-prose-pre-bg: var(--bg-card);
+    --tw-prose-th-borders: var(--border-color);
+    --tw-prose-td-borders: var(--border-color);
+  }
+
+  /* Foolproof overrides for Tailwind Typography v4 */
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    color: var(--heading-color) !important;
+    font-weight: 700 !important;
+  }
+  .prose strong, .prose b, .prose th {
+    color: var(--heading-color) !important;
+    font-weight: 600 !important;
+  }
+  .prose a {
+    color: var(--heading-color) !important;
+    text-decoration: underline !important;
+  }
+  .prose code {
+    color: var(--text-main) !important;
+  }
+  .prose blockquote {
+    color: var(--text-main) !important;
+    border-left-color: var(--border-color) !important;
+  }
+  .prose ul > li::marker, .prose ol > li::marker {
+    color: var(--text-muted) !important;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f4455;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4f556b;
+}
