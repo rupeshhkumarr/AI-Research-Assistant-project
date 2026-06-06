@@ -5,7 +5,7 @@ from typing import List, Dict
 _sessions: Dict[str, List[Dict[str, str]]] = {}
 
 # Maximum number of messages to keep per session
-MAX_MEMORY_MESSAGES = 10
+MAX_MEMORY_MESSAGES = 4
 
 def trim_history(session_id: str):
     """Ensure the session history does not exceed the maximum memory limit."""

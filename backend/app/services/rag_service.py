@@ -44,7 +44,7 @@ def load_vectorstore() -> SupabaseVectorStore:
 
 def get_retriever(vectorstore: SupabaseVectorStore):
     """Create a retriever from the vectorstore."""
-    return vectorstore.as_retriever(search_kwargs={"k": 5})
+    return vectorstore.as_retriever(search_kwargs={"k": 3})
 
 def extract_sources(docs) -> List[str]:
     """Extract distinct sources from retrieved documents."""
@@ -88,7 +88,7 @@ async def generate_answer(question: str, session_id: str = "default") -> Tuple[s
     context_str = "\n\n".join([doc.page_content for doc in docs])
     sources = extract_sources(docs)
     
-    history_str = format_history(get_history(session_id))
+    history_str = "No prior conversation."
     
     prompt = build_prompt(history_str, context_str, question)
     
@@ -117,7 +117,7 @@ async def generate_answer_stream(question: str, session_id: str = "default"):
     context_str = "\n\n".join([doc.page_content for doc in docs])
     sources = extract_sources(docs)
     
-    history_str = format_history(get_history(session_id))
+    history_str = "No prior conversation."
     prompt = build_prompt(history_str, context_str, question)
     
     llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.0, streaming=True)
