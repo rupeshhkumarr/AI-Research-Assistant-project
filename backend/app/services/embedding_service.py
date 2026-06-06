@@ -1,7 +1,8 @@
 import os
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import SupabaseVectorStore
 from app.config import settings
+from app.database.supabase_client import supabase_client
 
 
 def get_embedding_model() -> GoogleGenerativeAIEmbeddings:
@@ -15,7 +16,7 @@ def get_embedding_model() -> GoogleGenerativeAIEmbeddings:
 
 
 def embed_chunks(chunks):
-    """Create embeddings + store in FAISS safely."""
+    """Create embeddings + store in Supabase pgvector safely."""
 
     if not chunks:
         raise ValueError("No chunks received for embedding")
@@ -41,34 +42,22 @@ def embed_chunks(chunks):
 
     print(f"Embedding {len(texts)} chunks...")
 
-    vectorstore_path = str(settings.vectorstore_dir)
-    os.makedirs(vectorstore_path, exist_ok=True)
-
-    # Create or load FAISS
-    index_file = os.path.join(vectorstore_path, "index.faiss")
+    if not supabase_client:
+        raise ValueError("Supabase client not configured")
 
     try:
-        if os.path.exists(index_file):
-            print("Loading existing FAISS index...")
-            vectorstore = FAISS.load_local(
-                vectorstore_path,
-                model,
-                allow_dangerous_deserialization=True
-            )
-            vectorstore.add_texts(texts=texts, metadatas=metadatas)
-        else:
-            print("Creating new FAISS index...")
-            vectorstore = FAISS.from_texts(
-                texts=texts,
-                embedding=model,
-                metadatas=metadatas
-            )
+        vectorstore = SupabaseVectorStore.from_texts(
+            texts=texts,
+            embedding=model,
+            metadatas=metadatas,
+            client=supabase_client,
+            table_name="documents_embeddings",
+            query_name="match_documents"
+        )
     except Exception as e:
         print(f"❌ Failed to generate embeddings or create vectorstore: {e}")
         raise ValueError(f"Embedding generation failed: invalid model or API error. Model used: {settings.embedding_model}") from e
 
-    vectorstore.save_local(vectorstore_path)
-
-    print("FAISS saved successfully")
+    print("Supabase embeddings saved successfully")
 
     return vectorstore

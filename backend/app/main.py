@@ -6,6 +6,7 @@ from app.routers.chat import router as chat_router
 from app.routers.auth import router as auth_router
 from app.routers.settings import router as settings_router
 from app.routers.analytics import router as analytics_router
+from app.config import settings
 
 def create_app() -> FastAPI:
     app = FastAPI(title="AI Research Assistant Backend")
@@ -13,7 +14,7 @@ def create_app() -> FastAPI:
     # Configure CORS
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Adjust in production
+        allow_origins=[settings.frontend_url, "http://localhost:5173", "*"],  # Included * for smooth dev, can restrict in prod
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

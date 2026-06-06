@@ -11,11 +11,7 @@ import pathlib
 class Settings(BaseSettings):
     """Application settings loaded from environment variables or .env file."""
 
-    # Directory where uploaded files are stored
-    upload_dir: pathlib.Path = Field(
-        default=pathlib.Path(__file__).parents[2] / "uploads",
-        env="UPLOAD_DIR"
-    )
+
 
     # Maximum allowed upload size (20 MB)
     max_upload_size: int = Field(
@@ -55,10 +51,12 @@ class Settings(BaseSettings):
         env="AUTO_INGEST"
     )
 
-    # FAISS vectorstore location
-    vectorstore_dir: pathlib.Path = Field(
-        default=pathlib.Path(__file__).parents[2] / "vectorstore",
-        env="VECTORSTORE_DIR"
+
+
+    # Frontend URL for CORS
+    frontend_url: str = Field(
+        default="http://localhost:5173",
+        env="FRONTEND_URL"
     )
 
     # Supabase Configuration

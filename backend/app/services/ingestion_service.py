@@ -10,9 +10,8 @@ def process_and_update_document(doc_id: str, file_path: str):
     Wrapper around process_documents to update Supabase status.
     """
     try:
-        from pathlib import Path
         # Process the document
-        result = process_documents([Path(file_path)])
+        result = process_documents([file_path])
         chunks_count = result.get("total_chunks", 0)
         
         # Update Supabase chunks_count

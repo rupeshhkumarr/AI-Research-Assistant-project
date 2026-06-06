@@ -1,11 +1,12 @@
 import os
 import logging
 from typing import List, Dict, Tuple
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import SupabaseVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.config import settings
 from app.services.embedding_service import get_embedding_model
 from app.services.memory_service import get_history
+from app.database.supabase_client import supabase_client
 
 logger = logging.getLogger(__name__)
 
@@ -29,15 +30,19 @@ Question:
 
 Answer:"""
 
-def load_vectorstore() -> FAISS:
-    """Load the persisted FAISS vector store."""
-    vectorstore_path = str(settings.vectorstore_dir)
-    if not os.path.exists(vectorstore_path) or not os.path.exists(os.path.join(vectorstore_path, "index.faiss")):
+def load_vectorstore() -> SupabaseVectorStore:
+    """Load the persisted Supabase vector store."""
+    if not supabase_client:
         return None
     model = get_embedding_model()
-    return FAISS.load_local(vectorstore_path, model, allow_dangerous_deserialization=True)
+    return SupabaseVectorStore(
+        embedding=model,
+        client=supabase_client,
+        table_name="documents_embeddings",
+        query_name="match_documents"
+    )
 
-def get_retriever(vectorstore: FAISS):
+def get_retriever(vectorstore: SupabaseVectorStore):
     """Create a retriever from the vectorstore."""
     return vectorstore.as_retriever(search_kwargs={"k": 5})
 

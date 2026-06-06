@@ -21,9 +21,9 @@ async def upload_file(
     if not supabase_client:
         raise HTTPException(status_code=500, detail="Supabase not configured")
 
-    # 1. Save file locally
+    # 1. Save file to Supabase Storage
+    file_size = file.size
     saved_path = await save_file(file)
-    file_size = os.path.getsize(saved_path)
 
     # 2. Insert metadata into Supabase
     doc_id = str(uuid.uuid4())
@@ -78,11 +78,11 @@ def delete_file(document_id: str, current_user: User = Depends(get_current_user)
     if not del_res.data:
         raise HTTPException(status_code=500, detail="Failed to delete document metadata")
         
-    # Delete local file
+    # Delete file from Supabase Storage
     try:
-        delete_document(doc['filename'])
+        delete_document(doc['file_path'])
     except Exception:
-        pass # Best effort local deletion
+        pass # Best effort deletion
 
     # Note: For a complete implementation, you'd also remove chunks from FAISS here.
     return None
