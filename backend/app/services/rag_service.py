@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 from typing import List, Dict, Tuple
 from langchain_community.vectorstores import SupabaseVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -83,23 +84,37 @@ def build_prompt(history_str: str, context_str: str, question: str) -> str:
     )
 
 async def classify_intent(question: str) -> str:
-    """Classify user intent using a fast LLM call."""
-    try:
-        llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.0)
-        prompt = f"{INTENT_PROMPT}\n\nUser Message: {question}\nIntent:"
-        response = await llm.ainvoke(prompt)
-        content = response.content
-        if isinstance(content, list):
-            content = "".join([part.get("text", "") for part in content if isinstance(part, dict) and "text" in part])
-        elif not isinstance(content, str):
-            content = str(content)
-        intent = content.strip().lower()
-        if intent in ["greeting", "informational_query", "mixed_intent"]:
-            return intent
-        return "informational_query"
-    except Exception as e:
-        logger.error(f"Intent classification failed: {e}")
-        return "informational_query"
+    """Classify user intent using fast keyword/regex rules to save LLM quota."""
+    text = question.strip().lower()
+    
+    # Remove punctuation for easier matching
+    text_clean = re.sub(r'[^\w\s]', '', text)
+    
+    greetings = {
+        "hi", "hello", "hey", "good morning", "good evening", "good afternoon", 
+        "good night", "yo", "sup", "greetings", "howdy"
+    }
+    
+    small_talk = [
+        "how are you", "how are you doing", "whats up", "what is up",
+        "how is it going", "hows it going", "who are you", "what are you"
+    ]
+    
+    # Exact match for one-word greetings
+    if text_clean in greetings:
+        return "greeting"
+        
+    # Check for small talk phrases
+    for phrase in small_talk:
+        if phrase in text_clean and len(text_clean) < len(phrase) + 10:
+            return "greeting"
+            
+    # Mixed intent check (e.g. "hi what is farmsetu")
+    for greeting in greetings:
+        if text_clean.startswith(f"{greeting} "):
+            return "mixed_intent"
+            
+    return "informational_query"
 
 async def generate_answer(question: str, session_id: str = "default") -> Tuple[str, List[str]]:
     """Generate an answer using RAG pipeline."""
