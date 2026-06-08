@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     supabase_anon_key: str = Field(default="", env="SUPABASE_ANON_KEY")
     supabase_service_role_key: str = Field(default="", env="SUPABASE_SERVICE_ROLE_KEY")
 
+    # Chat context limit
+    chat_history_limit: int = Field(default=10, env="CHAT_HISTORY_LIMIT")
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

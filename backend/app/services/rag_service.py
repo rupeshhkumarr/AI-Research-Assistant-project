@@ -5,7 +5,6 @@ from langchain_community.vectorstores import SupabaseVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.config import settings
 from app.services.embedding_service import get_embedding_model
-from app.services.memory_service import get_history
 from app.database.supabase_client import supabase_client
 
 logger = logging.getLogger(__name__)
@@ -89,6 +88,15 @@ async def generate_answer(question: str, session_id: str = "default") -> Tuple[s
     sources = extract_sources(docs)
     
     history_str = "No prior conversation."
+    if supabase_client and session_id and session_id != "default":
+        limit = getattr(settings, "chat_history_limit", 10)
+        try:
+            res = supabase_client.table("messages").select("*").eq("conversation_id", session_id).order("created_at", desc=True).limit(limit).execute()
+            if res.data:
+                recent_messages = res.data[::-1]
+                history_str = format_history(recent_messages)
+        except Exception as e:
+            logger.error(f"Failed to fetch history for context: {e}")
     
     prompt = build_prompt(history_str, context_str, question)
     
@@ -118,6 +126,16 @@ async def generate_answer_stream(question: str, session_id: str = "default"):
     sources = extract_sources(docs)
     
     history_str = "No prior conversation."
+    if supabase_client and session_id and session_id != "default":
+        limit = getattr(settings, "chat_history_limit", 10)
+        try:
+            res = supabase_client.table("messages").select("*").eq("conversation_id", session_id).order("created_at", desc=True).limit(limit).execute()
+            if res.data:
+                recent_messages = res.data[::-1]
+                history_str = format_history(recent_messages)
+        except Exception as e:
+            logger.error(f"Failed to fetch history for context: {e}")
+            
     prompt = build_prompt(history_str, context_str, question)
     
     llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.0, streaming=True)

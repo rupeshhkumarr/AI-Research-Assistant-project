@@ -6,7 +6,6 @@ import json
 from app.models.chat import ChatRequest, ChatResponse, ClearMemoryRequest
 from app.models.supabase_models import User, Conversation, Message
 from app.services.rag_service import generate_answer
-from app.services.memory_service import add_message, clear_memory
 from app.routers.auth import get_current_user
 from app.database.supabase_client import supabase_client
 from typing import List, Dict, Any
@@ -54,10 +53,6 @@ async def chat_endpoint(request: ChatRequest, current_user: User = Depends(get_c
 
         # Generate answer using RAG
         answer, sources = await generate_answer(request.question, conv_id)
-        
-        # Add to local memory (if still using it)
-        add_message(conv_id, "user", request.question)
-        add_message(conv_id, "assistant", answer)
         
         # Store user query in messages table
         user_msg = {
