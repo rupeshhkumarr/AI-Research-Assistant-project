@@ -66,7 +66,7 @@ export default function Dashboard() {
           <div className="absolute inset-0 rounded-full border-r-4 border-purple-500 animate-[spin_2s_linear_infinite_reverse] blur-[1px] opacity-80"></div>
           <div className="absolute inset-2 rounded-full border-b-4 border-emerald-400 animate-[spin_4s_linear_infinite] opacity-60"></div>
           <div className="absolute inset-4 rounded-full bg-gradient-to-br from-primary-500/20 to-purple-500/20 animate-pulse backdrop-blur-md border border-white/10"></div>
-          
+
           {/* Center Brain Icon */}
           <BrainCircuit className="w-12 h-12 text-primary-500 animate-pulse relative z-10" />
         </div>
@@ -82,7 +82,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto pb-10">
-      
+
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -117,8 +117,8 @@ export default function Dashboard() {
         <h3 className="text-lg font-semibold text-text-main mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {quickActions.map((action, i) => (
-            <button 
-              key={i} 
+            <button
+              key={i}
               onClick={() => navigate(action.path)}
               className={`flex flex-col items-start gap-3 p-5 rounded-2xl border bg-gradient-to-br ${action.color} transition-all duration-300 hover:-translate-y-1 hover:shadow-xl text-left`}
             >
@@ -131,7 +131,7 @@ export default function Dashboard() {
 
       {/* Analytics & Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Usage Analytics */}
         <Card className="col-span-1 lg:col-span-2 min-h-[400px] flex flex-col p-6">
           <div className="flex items-center justify-between mb-6">
@@ -145,14 +145,14 @@ export default function Dashboard() {
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorQueries" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                 <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   itemStyle={{ color: '#3b82f6', fontWeight: 600 }}
                   cursor={{ stroke: 'var(--border-color)', strokeWidth: 1, strokeDasharray: '3 3' }}
@@ -162,7 +162,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
         </Card>
-        
+
         {/* Recent Activity Timeline */}
         <Card className="col-span-1 min-h-[400px] p-6 flex flex-col">
           <div className="flex items-center justify-between mb-6">
@@ -171,7 +171,7 @@ export default function Dashboard() {
               View all <ChevronRight size={14} />
             </button>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
             <div className="relative border-l border-border/50 ml-4 space-y-6 pb-4">
               {loading ? (
