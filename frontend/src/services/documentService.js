@@ -7,7 +7,7 @@ export const getDocuments = async () => {
     filename: doc.filename,
     size: 'N/A', // file_size was removed from schema
     total_chunks: doc.chunks_count, // map chunks_count to what frontend expects
-    upload_date: doc.upload_date ? new Date(doc.upload_date).toLocaleString() : 'N/A'
+    upload_date: doc.upload_date
   }));
 };
 
