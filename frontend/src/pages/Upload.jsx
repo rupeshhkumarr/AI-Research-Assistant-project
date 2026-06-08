@@ -107,7 +107,7 @@ export default function Upload() {
                       <span className="text-text-main font-medium">{doc.filename}</span>
                     </td>
                     <td className="py-4 text-text-muted">{formatSize(doc.file_size)}</td>
-                    <td className="py-4 text-text-muted font-mono text-xs">{doc.upload_date ? new Date(doc.upload_date).toLocaleDateString() : 'Today'}</td>
+                    <td className="py-4 text-text-muted font-mono text-xs">{doc.upload_date ? new Date(doc.upload_date).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' }) : 'Today'}</td>
                     <td className="py-4 pr-2 text-right">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase bg-emerald-500/10 text-emerald-500">
                         <CheckCircle2 size={12} strokeWidth={3} /> Ready

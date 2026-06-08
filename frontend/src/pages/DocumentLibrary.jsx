@@ -114,7 +114,7 @@ export default function DocumentLibrary() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-text-muted font-mono text-xs">
-                      {doc.upload_date ? new Date(doc.upload_date).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                      {doc.upload_date ? new Date(doc.upload_date).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-text-muted">
                       <div className="flex items-center gap-2">

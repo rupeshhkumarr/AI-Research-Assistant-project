@@ -40,6 +40,12 @@ export default function Chat() {
   
   // Ref for startListening to use inside useCallback without dependency cycle
   const startListeningRef = useRef(null);
+  
+  // Ref to hold the freshest handleSend function to avoid stale closures in voice callback
+  const handleSendRef = useRef();
+  
+  // Ref to prevent aborting stream when a new conversation is auto-created
+  const isAutoSwitchingRef = useRef(false);
 
   const { isListening, startListening, stopListening, isSupported } = useSpeechRecognition(
     useCallback((text) => {
@@ -47,7 +53,9 @@ export default function Chat() {
         const lang = detectLanguage(text);
         setChatLanguage(lang);
         setInput(text);
-        handleSend(null, text, true);
+        if (handleSendRef.current) {
+          handleSendRef.current(null, text, true);
+        }
         resetRecovery(); // Reset recovery loops on success
       }
     }, [resetRecovery]), 
@@ -106,12 +114,17 @@ export default function Chat() {
   const abortControllerRef = useRef(null);
 
   useEffect(() => {
-    // Kill any background stream if activeId changes or component unmounts
+    // Kill any background stream if activeId changes (user clicked sidebar) or component unmounts
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        isTypingRef.current = false;
-        setIsTyping(false);
+      if (isAutoSwitchingRef.current) {
+        // It changed because a new chat was created by the stream. Don't abort.
+        isAutoSwitchingRef.current = false;
+      } else {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+          isTypingRef.current = false;
+          setIsTyping(false);
+        }
       }
     };
   }, [activeId]);
@@ -190,6 +203,7 @@ export default function Chat() {
       (data) => {
         if (data.conversation_id && !currentConversationId) {
           currentConversationId = data.conversation_id;
+          isAutoSwitchingRef.current = true; // Prevent the cleanup effect from killing our stream
           setActiveId(currentConversationId);
           fetchConversations();
         } else if (data.token) {
@@ -275,6 +289,11 @@ export default function Chat() {
     resetRecovery();
     if (isListening) stopListening();
   };
+
+  // Keep handleSendRef perfectly up to date for the voice callback
+  useEffect(() => {
+    handleSendRef.current = handleSend;
+  });
 
   const handleRename = async (id, newTitle) => {
     try {
