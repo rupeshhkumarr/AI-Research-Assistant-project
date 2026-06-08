@@ -10,8 +10,8 @@ export const ChatMessage = ({ message }) => {
   const [sourcesExpanded, setSourcesExpanded] = React.useState(false);
 
   return (
-    <div className={`py-6 px-4 md:px-8 transition-colors duration-300 ${isAi ? 'bg-bg-hover/40 border-y border-border' : 'bg-transparent'}`}>
-      <div className="max-w-4xl mx-auto flex gap-4 md:gap-6">
+    <div className={`py-4 px-3 md:py-6 md:px-8 transition-colors duration-300 ${isAi ? 'bg-bg-hover/40 border-y border-border' : 'bg-transparent'}`}>
+      <div className="max-w-4xl mx-auto flex gap-3 md:gap-6">
         
         {/* Avatar */}
         <div className="flex-shrink-0 mt-1">
@@ -33,14 +33,14 @@ export const ChatMessage = ({ message }) => {
               <span>🎤 Voice Message</span>
             </div>
           )}
-          <div className="text-text-main prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 max-w-none">
+          <div className="text-text-main prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 max-w-none break-words min-w-0">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 code({node, inline, className, children, ...props}) {
                   const match = /language-(\w+)/.exec(className || '')
                   return !inline && match ? (
-                    <div className="rounded-md overflow-hidden my-4 border border-border">
+                    <div className="rounded-md overflow-x-auto my-4 border border-border w-full">
                       <div className="flex items-center px-4 py-1.5 bg-bg-card border-b border-border text-xs text-text-muted">
                         {match[1]}
                       </div>

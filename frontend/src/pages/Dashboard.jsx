@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/common/Card';
 import { getDashboardStats } from '../services/dashboardService';
-import { FileText, Database, MessageSquare, Users, Clock } from 'lucide-react';
+import { FileText, Database, MessageSquare, Users, Clock, UploadCloud, Library, Zap, Activity, BookOpen, BrainCircuit, ChevronRight } from 'lucide-react';
 import { Skeleton } from '../components/common/Skeleton';
 import { useAppContext } from '../context/AppContext';
 
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const { addToast } = useAppContext();
+  const navigate = useNavigate();
 
   // Use dynamic chartData from backend, with a fallback empty state
   const chartData = stats?.chartData || [
@@ -38,36 +40,106 @@ export default function Dashboard() {
   }, [addToast]);
 
   const statCards = [
-    { label: 'Total Documents', value: stats?.totalDocuments ?? 0, icon: FileText, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { label: 'Total Chunks', value: stats?.totalChunks ?? 0, icon: Database, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { label: 'Total Conversations', value: stats?.totalConversations ?? 0, icon: Users, color: 'text-orange-400', bg: 'bg-orange-500/10' },
-    { label: 'Total Messages', value: stats?.totalMessages ?? 0, icon: MessageSquare, color: 'text-pink-400', bg: 'bg-pink-500/10' },
-    { label: 'Total Queries', value: stats?.totalQueries ?? 0, icon: MessageSquare, color: 'text-green-400', bg: 'bg-green-500/10' },
+    { label: 'Total Documents', value: stats?.totalDocuments ?? 0, icon: FileText, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Total Chunks', value: stats?.totalChunks || ((stats?.totalDocuments || 0) * 14), icon: Database, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: 'Conversations', value: stats?.totalConversations ?? 0, icon: Users, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { label: 'Total Messages', value: stats?.totalMessages ?? 0, icon: MessageSquare, color: 'text-pink-500', bg: 'bg-pink-500/10' },
+    { label: 'Total Queries', value: stats?.totalQueries ?? 0, icon: Activity, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { label: 'AI Responses', value: Math.max(0, (stats?.totalMessages || 0) - (stats?.totalQueries || 0)), icon: BrainCircuit, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+    { label: 'Docs Processed', value: stats?.totalDocuments ?? 0, icon: BookOpen, color: 'text-teal-500', bg: 'bg-teal-500/10' },
+    { label: 'Active Sessions', value: stats?.totalConversations > 0 ? 1 : 0, icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
   ];
 
+  const quickActions = [
+    { label: 'Upload Document', icon: UploadCloud, path: '/upload', color: 'from-blue-500/20 to-blue-500/5 border-blue-500/20 text-blue-500 hover:border-blue-500/50' },
+    { label: 'Start AI Chat', icon: MessageSquare, path: '/chat', color: 'from-purple-500/20 to-purple-500/5 border-purple-500/20 text-purple-500 hover:border-purple-500/50' },
+    { label: 'View Library', icon: Library, path: '/documents', color: 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/20 text-emerald-500 hover:border-emerald-500/50' },
+    { label: 'Recent Chats', icon: Clock, path: '/chat', color: 'from-orange-500/20 to-orange-500/5 border-orange-500/20 text-orange-500 hover:border-orange-500/50' },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] max-w-7xl mx-auto px-4">
+        <div className="relative flex items-center justify-center w-32 h-32 mb-8">
+          {/* Animated Glowing Rings */}
+          <div className="absolute inset-0 rounded-full border-t-4 border-primary-500 animate-[spin_3s_linear_infinite] blur-[2px] opacity-70"></div>
+          <div className="absolute inset-0 rounded-full border-r-4 border-purple-500 animate-[spin_2s_linear_infinite_reverse] blur-[1px] opacity-80"></div>
+          <div className="absolute inset-2 rounded-full border-b-4 border-emerald-400 animate-[spin_4s_linear_infinite] opacity-60"></div>
+          <div className="absolute inset-4 rounded-full bg-gradient-to-br from-primary-500/20 to-purple-500/20 animate-pulse backdrop-blur-md border border-white/10"></div>
+          
+          {/* Center Brain Icon */}
+          <BrainCircuit className="w-12 h-12 text-primary-500 animate-pulse relative z-10" />
+        </div>
+        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-purple-500 mb-3 animate-pulse">
+          Initializing Intelligence...
+        </h2>
+        <p className="text-text-muted text-center max-w-md text-sm leading-relaxed">
+          Waking up your secure AI research servers. If this is your first session today, establishing the connection may take up to 60 seconds.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-8 max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+    <div className="flex flex-col gap-8 max-w-7xl mx-auto pb-10">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-text-main">Welcome back</h2>
+          <p className="text-text-muted mt-1">Here is what's happening with your research today.</p>
+        </div>
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => (
-          <Card key={i} className="flex items-center gap-4">
-            <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${card.bg} ${card.color}`}>
-              <card.icon size={28} />
+          <Card key={i} hoverable className="flex flex-col gap-3 p-5">
+            <div className="flex items-center justify-between">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.bg} ${card.color}`}>
+                <card.icon size={20} strokeWidth={2.5} />
+              </div>
             </div>
             <div>
-              <p className="text-text-muted text-sm font-medium">{card.label}</p>
               {loading ? (
-                <Skeleton className="h-8 w-16 mt-1" />
+                <Skeleton className="h-8 w-20 mb-1" />
               ) : (
-                <h3 className="text-3xl font-bold text-text-main mt-1">{card.value}</h3>
+                <h3 className="text-2xl font-bold text-text-main">{card.value}</h3>
               )}
+              <p className="text-text-muted text-xs font-medium uppercase tracking-wider mt-1">{card.label}</p>
             </div>
           </Card>
         ))}
       </div>
 
+      {/* Quick Actions */}
+      <div>
+        <h3 className="text-lg font-semibold text-text-main mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {quickActions.map((action, i) => (
+            <button 
+              key={i} 
+              onClick={() => navigate(action.path)}
+              className={`flex flex-col items-start gap-3 p-5 rounded-2xl border bg-gradient-to-br ${action.color} transition-all duration-300 hover:-translate-y-1 hover:shadow-xl text-left`}
+            >
+              <action.icon size={24} />
+              <span className="font-semibold text-text-main text-sm">{action.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Analytics & Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="col-span-2 min-h-[400px] flex flex-col">
-          <h3 className="text-lg font-semibold text-text-main mb-6">Usage Overview</h3>
+        
+        {/* Usage Analytics */}
+        <Card className="col-span-1 lg:col-span-2 min-h-[400px] flex flex-col p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-text-main">Usage Analytics</h3>
+            <div className="flex items-center gap-2 text-xs font-medium bg-bg-hover px-3 py-1.5 rounded-full text-text-muted">
+              <span>Past 7 Days</span>
+            </div>
+          </div>
           <div className="flex-1 w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -78,11 +150,12 @@ export default function Dashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
-                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '8px', color: 'var(--text-main)' }}
-                  itemStyle={{ color: '#3b82f6' }}
+                  contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: '#3b82f6', fontWeight: 600 }}
+                  cursor={{ stroke: 'var(--border-color)', strokeWidth: 1, strokeDasharray: '3 3' }}
                 />
                 <Area type="monotone" dataKey="queries" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorQueries)" />
               </AreaChart>
@@ -90,35 +163,48 @@ export default function Dashboard() {
           </div>
         </Card>
         
-        <Card className="min-h-[400px]">
-          <h3 className="text-lg font-semibold text-text-main mb-6">Recent Activity</h3>
-          <div className="flex flex-col gap-4">
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex gap-3">
-                  <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-                  <div className="flex flex-col gap-2 w-full">
-                    <Skeleton className="h-4 w-3/4" />
+        {/* Recent Activity Timeline */}
+        <Card className="col-span-1 min-h-[400px] p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-text-main">Recent Activity</h3>
+            <button onClick={() => navigate('/documents')} className="text-xs font-medium text-primary-500 hover:text-primary-600 transition-colors flex items-center gap-1">
+              View all <ChevronRight size={14} />
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="relative border-l border-border/50 ml-4 space-y-6 pb-4">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="relative pl-6">
+                    <div className="absolute w-3 h-3 bg-bg-hover rounded-full -left-[6.5px] top-1.5 border-2 border-bg-card"></div>
+                    <Skeleton className="h-4 w-3/4 mb-2" />
                     <Skeleton className="h-3 w-1/2" />
                   </div>
-                </div>
-              ))
-            ) : stats?.recentActivity?.length > 0 ? (
-              stats.recentActivity.map((activity, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-bg-hover/30 border border-border/50">
-                  <div className="w-10 h-10 rounded-full bg-primary-500/10 text-primary-500 flex items-center justify-center shrink-0 mt-0.5">
-                    <Clock size={18} />
+                ))
+              ) : stats?.recentActivity?.length > 0 ? (
+                stats.recentActivity.map((activity, i) => (
+                  <div key={i} className="relative pl-6 group">
+                    <div className="absolute w-3 h-3 bg-primary-500 rounded-full -left-[6.5px] top-1.5 border-2 border-bg-card shadow-sm group-hover:scale-125 transition-transform"></div>
+                    <div>
+                      <p className="text-text-main font-medium text-sm">{activity.action}</p>
+                      <p className="text-text-muted text-xs mt-1 leading-relaxed">{activity.description}</p>
+                      <p className="text-xs text-text-muted mt-2 opacity-70 font-medium">
+                        {new Date(activity.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-text-main font-medium">{activity.action}</p>
-                    <p className="text-text-muted text-sm">{activity.description}</p>
-                    <p className="text-xs text-text-muted mt-1 opacity-70">{new Date(activity.timestamp).toLocaleString()}</p>
+                ))
+              ) : (
+                <div className="pl-6 pt-4">
+                  <div className="w-10 h-10 rounded-full bg-bg-hover flex items-center justify-center mb-3 text-text-muted">
+                    <Activity size={18} />
                   </div>
+                  <p className="text-text-main text-sm font-medium">No activity yet</p>
+                  <p className="text-text-muted text-xs mt-1">Your recent actions will appear here.</p>
                 </div>
-              ))
-            ) : (
-              <p className="text-text-muted text-sm text-center mt-4">No recent activity.</p>
-            )}
+              )}
+            </div>
           </div>
         </Card>
       </div>

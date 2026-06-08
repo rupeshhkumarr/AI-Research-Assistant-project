@@ -5,7 +5,7 @@ import { cn } from '../../utils/cn';
 import { useAuthContext } from '../../context/AuthContext';
 import { useThemeContext } from '../../context/ThemeContext';
 
-export const Sidebar = () => {
+export const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuthContext();
   const { theme, setDarkTheme, setLightTheme } = useThemeContext();
@@ -29,7 +29,10 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 h-screen fixed left-0 top-0 border-r border-border bg-bg-sidebar flex flex-col z-40 transition-colors duration-300">
+    <aside className={cn(
+      "w-64 h-screen fixed left-0 top-0 border-r border-border bg-bg-sidebar flex flex-col z-40 transition-transform duration-300 md:translate-x-0",
+      isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+    )}>
       <div className="h-16 flex items-center px-6 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -44,6 +47,7 @@ export const Sidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(false)}
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",

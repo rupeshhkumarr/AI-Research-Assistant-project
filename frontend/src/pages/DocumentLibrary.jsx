@@ -5,7 +5,7 @@ import { Modal } from '../components/common/Modal';
 import { Input } from '../components/common/Input';
 import { getDocuments, deleteDocument } from '../services/documentService';
 import { useAppContext } from '../context/AppContext';
-import { Trash2, Search, FileText } from 'lucide-react';
+import { Trash2, Search, FileText, Database } from 'lucide-react';
 import { Skeleton } from '../components/common/Skeleton';
 
 export default function DocumentLibrary() {
@@ -64,59 +64,61 @@ export default function DocumentLibrary() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-text-main mb-1">Document Library</h2>
-          <p className="text-text-muted">Manage your indexed files.</p>
+    <div className="flex flex-col gap-6 md:gap-8 max-w-6xl mx-auto pb-10">
+      <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-2xl font-bold text-text-main">Library</h2>
+          <p className="text-text-muted">Manage the documents indexed in your knowledge base.</p>
         </div>
-        <div className="relative w-72">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+        <div className="relative w-full md:w-80 group">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-500 transition-colors" />
           <Input 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search documents..." 
-            className="pl-10 bg-bg-card" 
+            className="pl-11 bg-bg-card border-border shadow-sm focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 transition-all rounded-xl" 
           />
         </div>
       </div>
 
-      <Card className="p-0 overflow-hidden">
+      <Card className="p-0 overflow-hidden border-border/60">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-bg-hover">
-              <tr className="border-b border-border text-text-muted text-sm">
-                <th className="px-6 py-4 font-medium">File Name</th>
-                <th className="px-6 py-4 font-medium">Upload Date/Time</th>
-                <th className="px-6 py-4 font-medium">Size</th>
-                <th className="px-6 py-4 font-medium text-right">Actions</th>
+            <thead className="bg-bg-hover/50">
+              <tr className="border-b border-border/60 text-text-muted text-xs uppercase tracking-wider">
+                <th className="px-6 py-4 font-semibold">File Name</th>
+                <th className="px-6 py-4 font-semibold">Upload Date</th>
+                <th className="px-6 py-4 font-semibold">Size</th>
+                <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="text-sm">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border/50">
+                  <tr key={i} className="border-b border-border/40">
                     <td className="px-6 py-4"><Skeleton className="h-4 w-48" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-4 w-16" /></td>
-                    <td className="px-6 py-4"><Skeleton className="h-8 w-8 rounded-lg float-right" /></td>
+                    <td className="px-6 py-4 flex justify-end"><Skeleton className="h-8 w-8 rounded-lg" /></td>
                   </tr>
                 ))
               ) : filteredDocs.length > 0 ? (
                 filteredDocs.map((doc, i) => (
-                  <tr key={doc.id || i} className="border-b border-border/50 last:border-0 hover:bg-bg-hover/50 transition-colors">
+                  <tr key={doc.id || i} className="border-b border-border/40 last:border-0 hover:bg-bg-hover/40 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-bg-hover flex items-center justify-center shrink-0">
-                          <FileText size={16} className="text-primary-500" />
+                        <div className="w-9 h-9 rounded-xl bg-bg-hover flex items-center justify-center shrink-0 group-hover:bg-primary-500/10 transition-colors border border-border/50">
+                          <FileText size={18} className="text-text-muted group-hover:text-primary-500 transition-colors" />
                         </div>
                         <span className="text-text-main font-medium">{doc.filename}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-text-muted">{doc.upload_date ? new Date(doc.upload_date).toLocaleString() : 'N/A'}</td>
+                    <td className="px-6 py-4 text-text-muted font-mono text-xs">
+                      {doc.upload_date ? new Date(doc.upload_date).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                    </td>
                     <td className="px-6 py-4 text-text-muted">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-bg-card rounded text-xs text-text-muted font-medium border border-border">
+                        <span className="px-2.5 py-1 bg-bg-card rounded-md text-xs font-mono border border-border/60 shadow-sm text-text-muted">
                           {formatBytes(doc.file_size)}
                         </span>
                       </div>
@@ -124,7 +126,7 @@ export default function DocumentLibrary() {
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => setDocToDelete(doc)}
-                        className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
                         title="Delete Document"
                       >
                         <Trash2 size={18} />
@@ -134,14 +136,14 @@ export default function DocumentLibrary() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center text-text-muted">
+                  <td colSpan="4" className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-bg-hover flex items-center justify-center mb-4 text-text-muted">
-                        <FileText size={32} />
+                      <div className="w-16 h-16 rounded-full bg-bg-hover flex items-center justify-center mb-4 text-text-muted shadow-inner">
+                        <Database size={32} />
                       </div>
-                      <h3 className="text-lg font-medium text-text-main mb-1">No documents found</h3>
-                      <p className="text-text-muted mb-6">
-                        {search ? "We couldn't find any documents matching your search." : "You haven't uploaded any documents yet."}
+                      <h3 className="text-lg font-semibold text-text-main mb-1">No documents found</h3>
+                      <p className="text-text-muted text-sm max-w-sm">
+                        {search ? "We couldn't find any documents matching your search. Try different keywords." : "You haven't uploaded any documents yet. Go to the Upload page to add some."}
                       </p>
                     </div>
                   </td>
@@ -157,12 +159,12 @@ export default function DocumentLibrary() {
         onClose={() => !isDeleting && setDocToDelete(null)}
         title="Delete Document"
       >
-        <p className="text-gray-300 mb-6">
-          Are you sure you want to delete <strong>{docToDelete?.filename}</strong>? This action cannot be undone and it will be removed from the AI's knowledge base.
+        <p className="text-text-main mb-6">
+          Are you sure you want to delete <strong className="text-primary-500">{docToDelete?.filename}</strong>? This action cannot be undone and it will be removed from the AI's knowledge base.
         </p>
         <div className="flex gap-3 justify-end">
-          <Button variant="ghost" onClick={() => setDocToDelete(null)} disabled={isDeleting}>Cancel</Button>
-          <Button variant="danger" onClick={handleDelete} isLoading={isDeleting}>Delete File</Button>
+          <Button variant="ghost" onClick={() => setDocToDelete(null)} disabled={isDeleting} className="rounded-xl">Cancel</Button>
+          <Button variant="danger" onClick={handleDelete} isLoading={isDeleting} className="rounded-xl">Delete File</Button>
         </div>
       </Modal>
     </div>

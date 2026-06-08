@@ -289,18 +289,26 @@ export default function Chat() {
 
   return (
     <div className="absolute inset-0 flex bg-bg-main transition-colors duration-300">
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Toggle */}
       {!isSidebarOpen && (
         <button 
           onClick={() => setIsSidebarOpen(true)}
-          className="absolute top-4 left-4 z-50 p-2 bg-bg-card text-text-main rounded-md md:hidden border border-border shadow-md"
+          className="absolute top-4 left-4 z-20 p-2 bg-bg-card text-text-main rounded-md md:hidden border border-border shadow-md"
         >
           <Menu size={20} />
         </button>
       )}
 
+      {/* Mobile Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="absolute inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-0'} transition-all duration-300 md:translate-x-0 overflow-hidden flex-shrink-0 z-40 relative`}>
+      <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} absolute md:relative z-40 w-64 h-full transition-transform duration-300 md:translate-x-0 flex-shrink-0`}>
         <div className="h-full w-64">
           <ChatSidebar
             conversations={conversations}
@@ -366,7 +374,7 @@ export default function Chat() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 md:p-6 bg-gradient-to-t from-bg-main via-bg-main to-transparent">
+        <div className="p-3 md:p-6 bg-gradient-to-t from-bg-main via-bg-main to-transparent shrink-0">
           <div className="max-w-4xl mx-auto relative">
             
             {/* Status Badges */}
