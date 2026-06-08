@@ -150,7 +150,16 @@ export default function Chat() {
     const userMsg = forceText || input.trim();
     
     // Strict synchronous check to prevent double clicks and duplicate voice fires
-    if (!userMsg || isTypingRef.current) return;
+    if (!userMsg) return;
+
+    // Auto-abort previous generation if user submits a new question
+    if (isTypingRef.current) {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      isTypingRef.current = false;
+      setIsTyping(false);
+    }
 
     if (!forceText) setInput('');
     else setInput(''); // clear if auto-send via voice
@@ -164,6 +173,7 @@ export default function Chat() {
 
     stopSpeaking(); // Stop any previous speech
     resetRecovery(); // Stop any active recovery loop
+    if (isListening) stopListening(); // Stop mic before sending new request
 
     abortControllerRef.current = new AbortController();
 
@@ -263,6 +273,7 @@ export default function Chat() {
     }
     stopSpeaking();
     resetRecovery();
+    if (isListening) stopListening();
   };
 
   const handleRename = async (id, newTitle) => {
@@ -428,9 +439,14 @@ export default function Chat() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onFocus={() => {
+                  if (isListening) stopListening();
+                }}
+                onKeyDown={() => {
+                  if (isListening) stopListening();
+                }}
                 placeholder={isListening ? "Listening..." : "Message AI Research Assistant..."}
                 className="w-full bg-transparent text-text-main px-3 py-3.5 outline-none placeholder:text-text-muted rounded-xl"
-                disabled={isTyping || isListening}
               />
 
               <div className="absolute right-2 flex items-center gap-1">
@@ -438,7 +454,7 @@ export default function Chat() {
                 
                 <button
                   type="submit"
-                  disabled={(!input.trim() && !isListening) || isTyping}
+                  disabled={(!input.trim() && !isListening)}
                   className="p-2 rounded-lg bg-primary-600/10 text-primary-500 hover:bg-primary-600/20 disabled:bg-transparent disabled:text-text-muted/60 transition-colors"
                 >
                   <Send size={18} />
