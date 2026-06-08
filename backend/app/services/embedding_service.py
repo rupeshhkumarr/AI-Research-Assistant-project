@@ -55,7 +55,7 @@ def embed_chunks(chunks):
             query_name="match_documents"
         )
     except Exception as e:
-        print(f"❌ Failed to generate embeddings or create vectorstore: {e}")
+        print(f"Failed to generate embeddings or create vectorstore: {e}")
         raise ValueError(f"Embedding generation failed: invalid model or API error. Model used: {settings.embedding_model}") from e
 
     print("Supabase embeddings saved successfully")
