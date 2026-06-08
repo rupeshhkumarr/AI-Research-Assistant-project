@@ -29,6 +29,14 @@ Question:
 
 Answer:"""
 
+INTENT_PROMPT = """Classify the user's message into one of three categories:
+1. "greeting": Simple greetings, small talk, pleasantries (e.g., "Hi", "How are you", "Good morning").
+2. "informational_query": Questions asking for facts, data, research, or specific knowledge.
+3. "mixed_intent": A combination of both (e.g., "Hi! What does the document say about agriculture?").
+
+Return ONLY the exact string: greeting, informational_query, or mixed_intent.
+"""
+
 def load_vectorstore() -> SupabaseVectorStore:
     """Load the persisted Supabase vector store."""
     if not supabase_client:
@@ -71,21 +79,31 @@ def build_prompt(history_str: str, context_str: str, question: str) -> str:
     """Build the final RAG prompt."""
     return PROMPT_TEMPLATE.format(
         history=history_str,
-        context=context_str,
         question=question
     )
 
+async def classify_intent(question: str) -> str:
+    """Classify user intent using a fast LLM call."""
+    try:
+        llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.0)
+        prompt = f"{INTENT_PROMPT}\n\nUser Message: {question}\nIntent:"
+        response = await llm.ainvoke(prompt)
+        content = response.content
+        if isinstance(content, list):
+            content = "".join([part.get("text", "") for part in content if isinstance(part, dict) and "text" in part])
+        elif not isinstance(content, str):
+            content = str(content)
+        intent = content.strip().lower()
+        if intent in ["greeting", "informational_query", "mixed_intent"]:
+            return intent
+        return "informational_query"
+    except Exception as e:
+        logger.error(f"Intent classification failed: {e}")
+        return "informational_query"
+
 async def generate_answer(question: str, session_id: str = "default") -> Tuple[str, List[str]]:
     """Generate an answer using RAG pipeline."""
-    vectorstore = load_vectorstore()
-    if not vectorstore:
-        raise ValueError("No vectorstore")
-    
-    retriever = get_retriever(vectorstore)
-    docs = retriever.invoke(question)
-    
-    context_str = "\n\n".join([doc.page_content for doc in docs])
-    sources = extract_sources(docs)
+    intent = await classify_intent(question)
     
     history_str = "No prior conversation."
     if supabase_client and session_id and session_id != "default":
@@ -97,8 +115,42 @@ async def generate_answer(question: str, session_id: str = "default") -> Tuple[s
                 history_str = format_history(recent_messages)
         except Exception as e:
             logger.error(f"Failed to fetch history for context: {e}")
+
+    if intent == "greeting":
+        llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.7)
+        system_prompt = "You are a friendly, conversational AI Research Assistant. Keep responses natural, warm, and engaging like ChatGPT. Do not act robotic."
+        prompt = f"{system_prompt}\n\nConversation History:\n{history_str}\n\nUser: {question}\nAssistant:"
+        response = llm.invoke(prompt)
+        answer_text = response.content
+        if isinstance(answer_text, list):
+            answer_text = "".join([part.get("text", "") for part in answer_text if isinstance(part, dict) and "text" in part])
+        elif not isinstance(answer_text, str):
+            answer_text = str(answer_text)
+        return answer_text, []
+
+    vectorstore = load_vectorstore()
+    if not vectorstore:
+        raise ValueError("No vectorstore")
     
-    prompt = build_prompt(history_str, context_str, question)
+    retriever = get_retriever(vectorstore)
+    docs = retriever.invoke(question)
+    
+    context_str = "\n\n".join([doc.page_content for doc in docs])
+    sources = extract_sources(docs)
+    
+    if intent == "mixed_intent":
+        prompt_tmpl = PROMPT_TEMPLATE.replace(
+            "4. If answer is missing, respond EXACTLY:\n\"I could not find this information in the uploaded documents.\"", 
+            "4. Be friendly and conversational at the start, then answer the question. If answer is missing, state it clearly."
+        )
+    else:
+        prompt_tmpl = PROMPT_TEMPLATE
+        
+    prompt = prompt_tmpl.format(
+        history=history_str,
+        context=context_str,
+        question=question
+    )
     
     llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.0)
     response = llm.invoke(prompt)
@@ -115,15 +167,8 @@ async def generate_answer(question: str, session_id: str = "default") -> Tuple[s
 async def generate_answer_stream(question: str, session_id: str = "default"):
     """Generate an answer using RAG pipeline, yielding tokens."""
     from typing import AsyncGenerator, Any
-    vectorstore = load_vectorstore()
-    if not vectorstore:
-        raise ValueError("No vectorstore")
     
-    retriever = get_retriever(vectorstore)
-    docs = retriever.invoke(question)
-    
-    context_str = "\n\n".join([doc.page_content for doc in docs])
-    sources = extract_sources(docs)
+    intent = await classify_intent(question)
     
     history_str = "No prior conversation."
     if supabase_client and session_id and session_id != "default":
@@ -135,8 +180,51 @@ async def generate_answer_stream(question: str, session_id: str = "default"):
                 history_str = format_history(recent_messages)
         except Exception as e:
             logger.error(f"Failed to fetch history for context: {e}")
-            
-    prompt = build_prompt(history_str, context_str, question)
+
+    if intent == "greeting":
+        llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.7, streaming=True)
+        system_prompt = "You are a friendly, conversational AI Research Assistant. Keep responses natural, warm, and engaging like ChatGPT. Do not act robotic."
+        prompt = f"{system_prompt}\n\nConversation History:\n{history_str}\n\nUser: {question}\nAssistant:"
+        
+        full_answer = ""
+        async for chunk in llm.astream(prompt):
+            if chunk.content:
+                chunk_text = chunk.content
+                if isinstance(chunk_text, list):
+                    chunk_text = "".join([part.get("text", "") for part in chunk_text if isinstance(part, dict) and "text" in part])
+                elif not isinstance(chunk_text, str):
+                    chunk_text = str(chunk_text)
+                    
+                if chunk_text:
+                    full_answer += chunk_text
+                    yield {"token": chunk_text}
+                
+        yield {"sources": [], "full_answer": full_answer}
+        return
+
+    vectorstore = load_vectorstore()
+    if not vectorstore:
+        raise ValueError("No vectorstore")
+    
+    retriever = get_retriever(vectorstore)
+    docs = retriever.invoke(question)
+    
+    context_str = "\n\n".join([doc.page_content for doc in docs])
+    sources = extract_sources(docs)
+    
+    if intent == "mixed_intent":
+        prompt_tmpl = PROMPT_TEMPLATE.replace(
+            "4. If answer is missing, respond EXACTLY:\n\"I could not find this information in the uploaded documents.\"", 
+            "4. Be friendly and conversational at the start, then answer the question. If answer is missing, state it clearly."
+        )
+    else:
+        prompt_tmpl = PROMPT_TEMPLATE
+        
+    prompt = prompt_tmpl.format(
+        history=history_str,
+        context=context_str,
+        question=question
+    )
     
     llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.0, streaming=True)
     
