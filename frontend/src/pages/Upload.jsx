@@ -83,7 +83,7 @@ export default function Upload() {
               <tr className="border-b border-border/60 text-text-muted text-xs uppercase tracking-wider">
                 <th className="pb-3 font-semibold pl-2">File Name</th>
                 <th className="pb-3 font-semibold">Size</th>
-                <th className="pb-3 font-semibold">Upload Date</th>
+                <th className="pb-3 font-semibold">Upload Date/Time</th>
                 <th className="pb-3 font-semibold pr-2 text-right">Status</th>
               </tr>
             </thead>

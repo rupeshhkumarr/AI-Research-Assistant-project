@@ -87,7 +87,7 @@ export default function DocumentLibrary() {
             <thead className="bg-bg-hover/50">
               <tr className="border-b border-border/60 text-text-muted text-xs uppercase tracking-wider">
                 <th className="px-6 py-4 font-semibold">File Name</th>
-                <th className="px-6 py-4 font-semibold">Upload Date</th>
+                <th className="px-6 py-4 font-semibold">Upload Date/Time</th>
                 <th className="px-6 py-4 font-semibold">Size</th>
                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
