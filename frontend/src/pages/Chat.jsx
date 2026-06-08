@@ -197,6 +197,7 @@ export default function Chat() {
 
     let currentConversationId = activeId;
     let fullResponseText = '';
+    let responseSources = [];
 
     await streamChatMessage(
       payload,
@@ -219,6 +220,7 @@ export default function Chat() {
             return newMessages;
           });
         } else if (data.sources) {
+          responseSources = data.sources;
           setMessages(prev => {
             const newMessages = [...prev];
             const lastMsg = newMessages[newMessages.length - 1];
@@ -262,19 +264,25 @@ export default function Chat() {
         
         if (!aborted && fullResponseText) {
           // Streaming finished successfully! 
-          // User requested that the AI only speaks a short intro instead of reading the entire long response aloud.
           const lang = detectLanguage(userMsg);
-          let spokenIntro = '';
           
-          if (lang === 'hi-IN') {
-            spokenIntro = `दिए गए दस्तावेज़ों के आधार पर, ${userMsg} के बारे में जानकारी स्क्रीन पर दी गई है।`;
-          } else if (lang === 'en-IN') {
-            spokenIntro = `Provided documents ke hisaab se, ${userMsg} ke baare mein information screen par hai.`;
+          if (responseSources.length === 0) {
+            // Conversational response or fallback: read the actual short text aloud!
+            speak(fullResponseText, lang);
           } else {
-            spokenIntro = `Based on the provided documents, here is the information about ${userMsg}.`;
-          }
+            // RAG response: read the intro instead of the whole long essay
+            let spokenIntro = '';
+            
+            if (lang === 'hi-IN') {
+              spokenIntro = `दिए गए दस्तावेज़ों के आधार पर, ${userMsg} के बारे में जानकारी स्क्रीन पर दी गई है।`;
+            } else if (lang === 'en-IN') {
+              spokenIntro = `Provided documents ke hisaab se, ${userMsg} ke baare mein information screen par hai.`;
+            } else {
+              spokenIntro = `Based on the provided documents, here is the information about ${userMsg}.`;
+            }
 
-          speak(spokenIntro, lang);
+            speak(spokenIntro, lang);
+          }
         }
       },
       abortControllerRef.current
