@@ -1,4 +1,5 @@
 import os
+import uuid
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import SupabaseVectorStore
 from app.config import settings
@@ -23,19 +24,21 @@ def embed_chunks(chunks):
 
     model = get_embedding_model()
     print("EMBEDDING MODEL IN USE:", settings.embedding_model)
-    # 🔥 SAFE extraction (prevents silent failure)
+    # SAFE extraction (prevents silent failure)
     texts = []
     metadatas = []
+    ids = []
 
     for i, chunk in enumerate(chunks):
         content = chunk.get("content", "").strip()
 
         if not content:
-            print(f"⚠️ Skipping empty chunk at index {i}")
+            print(f"Skipping empty chunk at index {i}")
             continue
 
         texts.append(content)
         metadatas.append(chunk.get("metadata", {}))
+        ids.append(str(uuid.uuid4()))
 
     if not texts:
         raise ValueError("All chunks are empty after processing")
@@ -50,6 +53,7 @@ def embed_chunks(chunks):
             texts=texts,
             embedding=model,
             metadatas=metadatas,
+            ids=ids,
             client=supabase_client,
             table_name="documents_embeddings",
             query_name="match_documents"
