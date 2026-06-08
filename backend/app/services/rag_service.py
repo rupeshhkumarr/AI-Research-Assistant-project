@@ -116,6 +116,32 @@ async def classify_intent(question: str) -> str:
             
     return "informational_query"
 
+import random
+
+def get_hardcoded_greeting(question: str) -> str:
+    """Return a natural hardcoded greeting to avoid API latency."""
+    text_clean = re.sub(r'[^\w\s]', '', question.strip().lower())
+    
+    if text_clean in ["hi", "hello", "hey", "yo", "sup", "howdy"]:
+        return random.choice([
+            "Hey! 👋 How's your day going so far?",
+            "Hello! How can I help you with your documents today?",
+            "Hi there! What would you like to explore?"
+        ])
+        
+    if "good morning" in text_clean:
+        return "Good morning! ☀️ Hope you're having a great start to your day."
+        
+    if "good evening" in text_clean or "good night" in text_clean:
+        return "Good evening! 🌙 Let me know if you need any help."
+        
+    small_talk = ["how are you", "how is it going", "whats up", "hows it going"]
+    for phrase in small_talk:
+        if phrase in text_clean:
+            return "I'm doing great, thanks for asking! Ready to help you analyze your documents. What's on your mind?"
+            
+    return "Hello! 👋 How can I assist you today?"
+
 async def generate_answer(question: str, session_id: str = "default") -> Tuple[str, List[str]]:
     """Generate an answer using RAG pipeline."""
     intent = await classify_intent(question)
@@ -132,15 +158,7 @@ async def generate_answer(question: str, session_id: str = "default") -> Tuple[s
             logger.error(f"Failed to fetch history for context: {e}")
 
     if intent == "greeting":
-        llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.7)
-        system_prompt = "You are a friendly, conversational AI Research Assistant. Keep responses natural, warm, and engaging like ChatGPT. Do not act robotic."
-        prompt = f"{system_prompt}\n\nConversation History:\n{history_str}\n\nUser: {question}\nAssistant:"
-        response = llm.invoke(prompt)
-        answer_text = response.content
-        if isinstance(answer_text, list):
-            answer_text = "".join([part.get("text", "") for part in answer_text if isinstance(part, dict) and "text" in part])
-        elif not isinstance(answer_text, str):
-            answer_text = str(answer_text)
+        answer_text = get_hardcoded_greeting(question)
         return answer_text, []
 
     vectorstore = load_vectorstore()
@@ -197,24 +215,17 @@ async def generate_answer_stream(question: str, session_id: str = "default"):
             logger.error(f"Failed to fetch history for context: {e}")
 
     if intent == "greeting":
-        llm = ChatGoogleGenerativeAI(model=settings.gemini_model, temperature=0.7, streaming=True)
-        system_prompt = "You are a friendly, conversational AI Research Assistant. Keep responses natural, warm, and engaging like ChatGPT. Do not act robotic."
-        prompt = f"{system_prompt}\n\nConversation History:\n{history_str}\n\nUser: {question}\nAssistant:"
+        import asyncio
+        answer_text = get_hardcoded_greeting(question)
         
-        full_answer = ""
-        async for chunk in llm.astream(prompt):
-            if chunk.content:
-                chunk_text = chunk.content
-                if isinstance(chunk_text, list):
-                    chunk_text = "".join([part.get("text", "") for part in chunk_text if isinstance(part, dict) and "text" in part])
-                elif not isinstance(chunk_text, str):
-                    chunk_text = str(chunk_text)
-                    
-                if chunk_text:
-                    full_answer += chunk_text
-                    yield {"token": chunk_text}
-                
-        yield {"sources": [], "full_answer": full_answer}
+        # Split into words to simulate fast natural streaming
+        words = answer_text.split(" ")
+        for i, word in enumerate(words):
+            token = word + (" " if i < len(words) - 1 else "")
+            yield {"token": token}
+            await asyncio.sleep(0.03) # 30ms delay for visual effect
+            
+        yield {"sources": [], "full_answer": answer_text}
         return
 
     vectorstore = load_vectorstore()
