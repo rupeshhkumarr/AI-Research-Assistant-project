@@ -163,7 +163,8 @@ async def generate_answer(question: str, session_id: str = "default", user_id: s
 
     if supabase_client and user_id:
         doc_count_res = supabase_client.table("documents").select("id", count="exact").eq("user_id", user_id).execute()
-        if doc_count_res.count == 0:
+        count = getattr(doc_count_res, 'count', None)
+        if count == 0 or count is None:
             return "You have not uploaded any document. Please upload a document to get started.", []
 
     vectorstore = load_vectorstore()
@@ -235,7 +236,8 @@ async def generate_answer_stream(question: str, session_id: str = "default", use
 
     if supabase_client and user_id:
         doc_count_res = supabase_client.table("documents").select("id", count="exact").eq("user_id", user_id).execute()
-        if doc_count_res.count == 0:
+        count = getattr(doc_count_res, 'count', None)
+        if count == 0 or count is None:
             import asyncio
             answer_text = "You have not uploaded any document. Please upload a document to get started."
             words = answer_text.split(" ")
