@@ -142,7 +142,7 @@ def get_hardcoded_greeting(question: str) -> str:
             
     return "Hello! 👋 How can I assist you today?"
 
-async def generate_answer(question: str, session_id: str = "default") -> Tuple[str, List[str]]:
+async def generate_answer(question: str, session_id: str = "default", user_id: str = None) -> Tuple[str, List[str]]:
     """Generate an answer using RAG pipeline."""
     intent = await classify_intent(question)
     
@@ -160,6 +160,11 @@ async def generate_answer(question: str, session_id: str = "default") -> Tuple[s
     if intent == "greeting":
         answer_text = get_hardcoded_greeting(question)
         return answer_text, []
+
+    if supabase_client and user_id:
+        doc_count_res = supabase_client.table("documents").select("id", count="exact").eq("user_id", user_id).execute()
+        if doc_count_res.count == 0:
+            return "You have not uploaded any document. Please upload a document to get started.", []
 
     vectorstore = load_vectorstore()
     if not vectorstore:
@@ -197,7 +202,7 @@ async def generate_answer(question: str, session_id: str = "default") -> Tuple[s
         
     return answer_text, sources
 
-async def generate_answer_stream(question: str, session_id: str = "default"):
+async def generate_answer_stream(question: str, session_id: str = "default", user_id: str = None):
     """Generate an answer using RAG pipeline, yielding tokens."""
     from typing import AsyncGenerator, Any
     
@@ -227,6 +232,19 @@ async def generate_answer_stream(question: str, session_id: str = "default"):
             
         yield {"sources": [], "full_answer": answer_text}
         return
+
+    if supabase_client and user_id:
+        doc_count_res = supabase_client.table("documents").select("id", count="exact").eq("user_id", user_id).execute()
+        if doc_count_res.count == 0:
+            import asyncio
+            answer_text = "You have not uploaded any document. Please upload a document to get started."
+            words = answer_text.split(" ")
+            for i, word in enumerate(words):
+                token = word + (" " if i < len(words) - 1 else "")
+                yield {"token": token}
+                await asyncio.sleep(0.03)
+            yield {"sources": [], "full_answer": answer_text}
+            return
 
     vectorstore = load_vectorstore()
     if not vectorstore:

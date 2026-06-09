@@ -52,7 +52,7 @@ async def chat_endpoint(request: ChatRequest, current_user: User = Depends(get_c
                 raise HTTPException(status_code=404, detail="Conversation not found")
 
         # Generate answer using RAG
-        answer, sources = await generate_answer(request.question, conv_id)
+        answer, sources = await generate_answer(request.question, conv_id, str(current_user.id))
         
         # Store user query in messages table
         user_msg = {
@@ -134,7 +134,7 @@ async def chat_stream_endpoint(request: ChatRequest, current_user: User = Depend
                 yield f"data: {json.dumps({'conversation_id': str(conv_id)})}\n\n"
                 
                 from app.services.rag_service import generate_answer_stream
-                async for chunk in generate_answer_stream(request.question, conv_id):
+                async for chunk in generate_answer_stream(request.question, conv_id, str(current_user.id)):
                     if "token" in chunk:
                         full_answer += chunk['token']
                         yield f"data: {json.dumps({'token': chunk['token']})}\n\n"
