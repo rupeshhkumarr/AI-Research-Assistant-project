@@ -366,10 +366,10 @@ export default function Chat() {
       <div className="flex-1 flex flex-col min-w-0 bg-bg-main relative transition-colors duration-300">
         <VoiceControls isSpeaking={isSpeaking} onStopSpeaking={() => { stopSpeaking(); resetRecovery(); }} />
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col pb-4 relative">
+        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col pb-4 relative pt-16 md:pt-0">
           
           {messages.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center px-4 mt-20">
+            <div className="flex-1 flex flex-col items-center justify-center px-4 mt-8 md:mt-20">
               <div className="w-16 h-16 bg-bg-hover border border-border rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                 <span className="text-3xl">🤖</span>
               </div>
@@ -415,39 +415,38 @@ export default function Chat() {
         <div className="p-3 md:p-6 bg-gradient-to-t from-bg-main via-bg-main to-transparent shrink-0">
           <div className="max-w-4xl mx-auto relative">
             
-            {/* Status Badges */}
-            <div className="absolute -top-10 left-0 right-0 flex justify-center pointer-events-none">
+            {/* Status Badges & Controls */}
+            <div className="absolute bottom-full left-0 right-0 flex flex-col items-center justify-end gap-3 mb-4 z-10 pointer-events-none">
+              {/* Stop Generating Button */}
+              {isTyping && (
+                <button 
+                  onClick={handleStop}
+                  className="bg-bg-card text-text-main hover:bg-bg-hover border border-border rounded-full px-4 py-1.5 flex items-center gap-2 text-sm shadow-xl transition-all pointer-events-auto"
+                >
+                  <div className="w-2 h-2 bg-text-muted rounded-sm"></div> Stop Generating
+                </button>
+              )}
+
+              {/* Status Badges */}
               {isListening && (
-                <span className="bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
+                <span className="bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 pointer-events-auto">
                   <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
                   🎤 Listening...
                 </span>
               )}
               {isRecovering && !isListening && (
-                <span className="bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+                <span className="bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 pointer-events-auto">
                   <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
                   🎤 Waiting for you to speak again...
                 </span>
               )}
               {isTyping && !isSpeaking && (
-                <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
+                <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 pointer-events-auto">
                   <Loader2 size={12} className="animate-spin" />
                   🤖 Generating Answer...
                 </span>
               )}
             </div>
-
-            {/* Stop Generating Button */}
-            {isTyping && (
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex justify-center z-10">
-                 <button 
-                    onClick={handleStop}
-                    className="bg-bg-card text-text-main hover:bg-bg-hover border border-border rounded-full px-4 py-1.5 flex items-center gap-2 text-sm shadow-xl transition-all pointer-events-auto"
-                 >
-                    <div className="w-2 h-2 bg-text-muted rounded-sm"></div> Stop Generating
-                 </button>
-              </div>
-            )}
 
             <form 
               onSubmit={handleSend}

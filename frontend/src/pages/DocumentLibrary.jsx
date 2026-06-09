@@ -7,6 +7,7 @@ import { getDocuments, deleteDocument } from '../services/documentService';
 import { useAppContext } from '../context/AppContext';
 import { Trash2, Search, FileText, Database } from 'lucide-react';
 import { Skeleton } from '../components/common/Skeleton';
+import { LoadingScreen } from '../components/common/LoadingScreen';
 
 export default function DocumentLibrary() {
   const [documents, setDocuments] = useState([]);
@@ -63,6 +64,10 @@ export default function DocumentLibrary() {
     return parseFloat((num / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  if (loading) {
+    return <LoadingScreen message="Loading Library..." subtext="Retrieving your indexed documents and knowledge base securely..." />;
+  }
+
   return (
     <div className="flex flex-col gap-6 md:gap-8 max-w-6xl mx-auto pb-10">
       <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
@@ -93,16 +98,7 @@ export default function DocumentLibrary() {
               </tr>
             </thead>
             <tbody className="text-sm">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border/40">
-                    <td className="px-6 py-4"><Skeleton className="h-4 w-48" /></td>
-                    <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
-                    <td className="px-6 py-4"><Skeleton className="h-4 w-16" /></td>
-                    <td className="px-6 py-4 flex justify-end"><Skeleton className="h-8 w-8 rounded-lg" /></td>
-                  </tr>
-                ))
-              ) : filteredDocs.length > 0 ? (
+              {filteredDocs.length > 0 ? (
                 filteredDocs.map((doc, i) => (
                   <tr key={doc.id || i} className="border-b border-border/40 last:border-0 hover:bg-bg-hover/40 transition-colors group">
                     <td className="px-6 py-4">

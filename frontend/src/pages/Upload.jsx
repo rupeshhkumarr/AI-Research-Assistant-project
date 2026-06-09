@@ -6,6 +6,7 @@ import { uploadDocuments } from '../services/uploadService';
 import { getDocuments } from '../services/documentService';
 import { FileText, CheckCircle2, Clock } from 'lucide-react';
 import { Skeleton } from '../components/common/Skeleton';
+import { LoadingScreen } from '../components/common/LoadingScreen';
 
 export default function Upload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -57,6 +58,10 @@ export default function Upload() {
     return parseFloat((num / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  if (loadingDocs) {
+    return <LoadingScreen message="Loading Knowledge Base..." subtext="Retrieving your upload history and secure environment..." />;
+  }
+
   return (
     <div className="flex flex-col gap-6 md:gap-8 max-w-5xl mx-auto pb-10">
       
@@ -88,16 +93,7 @@ export default function Upload() {
               </tr>
             </thead>
             <tbody className="text-sm">
-              {loadingDocs ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border/40">
-                    <td className="py-4 pl-2"><Skeleton className="h-4 w-48" /></td>
-                    <td className="py-4"><Skeleton className="h-4 w-16" /></td>
-                    <td className="py-4"><Skeleton className="h-4 w-24" /></td>
-                    <td className="py-4 pr-2 flex justify-end"><Skeleton className="h-6 w-20 rounded-full" /></td>
-                  </tr>
-                ))
-              ) : recentDocs.length > 0 ? (
+              {recentDocs.length > 0 ? (
                 recentDocs.map((doc, i) => (
                   <tr key={doc.id || i} className="border-b border-border/40 last:border-0 hover:bg-bg-hover/40 transition-colors group">
                     <td className="py-4 pl-2 flex items-center gap-3">

@@ -5,13 +5,17 @@ import { getDashboardStats } from '../services/dashboardService';
 import { FileText, Database, MessageSquare, Users, Clock, UploadCloud, Library, Zap, Activity, BookOpen, BrainCircuit, ChevronRight } from 'lucide-react';
 import { Skeleton } from '../components/common/Skeleton';
 import { useAppContext } from '../context/AppContext';
+import { useAuthContext } from '../context/AuthContext';
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+import { LoadingScreen } from '../components/common/LoadingScreen';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const { addToast } = useAppContext();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
 
   // Use dynamic chartData from backend, with a fallback empty state
@@ -58,26 +62,7 @@ export default function Dashboard() {
   ];
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] max-w-7xl mx-auto px-4">
-        <div className="relative flex items-center justify-center w-32 h-32 mb-8">
-          {/* Animated Glowing Rings */}
-          <div className="absolute inset-0 rounded-full border-t-4 border-primary-500 animate-[spin_3s_linear_infinite] blur-[2px] opacity-70"></div>
-          <div className="absolute inset-0 rounded-full border-r-4 border-purple-500 animate-[spin_2s_linear_infinite_reverse] blur-[1px] opacity-80"></div>
-          <div className="absolute inset-2 rounded-full border-b-4 border-emerald-400 animate-[spin_4s_linear_infinite] opacity-60"></div>
-          <div className="absolute inset-4 rounded-full bg-gradient-to-br from-primary-500/20 to-purple-500/20 animate-pulse backdrop-blur-md border border-white/10"></div>
-
-          {/* Center Brain Icon */}
-          <BrainCircuit className="w-12 h-12 text-primary-500 animate-pulse relative z-10" />
-        </div>
-        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-purple-500 mb-3 animate-pulse">
-          Initializing Intelligence...
-        </h2>
-        <p className="text-text-muted text-center max-w-md text-sm leading-relaxed">
-          Waking up your secure AI research servers. If this is your first session today, establishing the connection may take up to 60 seconds.
-        </p>
-      </div>
-    );
+    return <LoadingScreen message="Initializing Intelligence..." />;
   }
 
   return (
@@ -86,27 +71,36 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-text-main">Welcome back</h2>
-          <p className="text-text-muted mt-1">Here is what's happening with your research today.</p>
+          {stats?.totalDocuments === 0 && stats?.totalConversations === 0 && stats?.totalQueries === 0 ? (
+            <>
+              <h2 className="text-2xl font-bold text-text-main">Welcome, {user?.user_metadata?.full_name?.split(' ')[0] || 'there'}!</h2>
+              <p className="text-text-muted mt-1">Get started by uploading your first document or starting a chat.</p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-text-main">Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'there'}</h2>
+              <p className="text-text-muted mt-1">Here is what's happening with your research today.</p>
+            </>
+          )}
         </div>
       </div>
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => (
-          <Card key={i} hoverable className="flex flex-col gap-3 p-5">
-            <div className="flex items-center justify-between">
+          <Card key={i} hoverable className="flex flex-col gap-4 p-5">
+            <div className="flex items-start justify-between">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.bg} ${card.color}`}>
                 <card.icon size={20} strokeWidth={2.5} />
               </div>
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <h3 className="text-3xl font-bold text-text-main">{card.value}</h3>
+              )}
             </div>
             <div>
-              {loading ? (
-                <Skeleton className="h-8 w-20 mb-1" />
-              ) : (
-                <h3 className="text-2xl font-bold text-text-main">{card.value}</h3>
-              )}
-              <p className="text-text-muted text-xs font-medium uppercase tracking-wider mt-1">{card.label}</p>
+              <p className="text-text-muted text-sm font-semibold uppercase tracking-wider mt-2">{card.label}</p>
             </div>
           </Card>
         ))}
